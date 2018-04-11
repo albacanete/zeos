@@ -63,12 +63,19 @@ void cpu_idle(void)
 	}
 }
 
+
 void init_idle (void)
 {
 	struct list_head *ilh = list_first(&freequeue);
+	list_del(ilh); //l'eliminem, sino segueix a la freequeue
 	struct task_struct *its = list_head_to_task_struct(&ilh);
 	its.PID = 0;
-	if (allocate_DIR(&its) != 1) //error
+	if (allocate_DIR(&its) != 1) {
+		}//falta tratar error
+		
+	
+	union taskunion *itu = (union task_union*)tu;
+	task_switch(&tu);
 	
 }
 
@@ -103,6 +110,32 @@ struct task_struct* current()
 	: "=g" (ret_value)
   );
   return (struct task_struct*)(ret_value&0xfffff000);
+}
+
+void task_switch(union task_union*t) {
+	
+	__asm__ __volatile__(
+		//tenemos que guardar esi edi ebx
+	)
+	//llamar a inner_task_switch. no entenc xq fer una funcio apart.
+	//crec que es la que realment canvia el proces 
+	
+	__asm__ __volatile__(
+		//aqui restauramos esi edi ebx
+	)
+}
+
+
+void inner_task_switch(union task_union*t) {
+	//1) update de tss
+	
+	//2) change user address space --> update the current page directory
+	 struct task_struct *ts = (struct task_struct*)t;  //agafo el task_struct del nou proces a executar
+	 page_table_entry* new_TD = ts.dir_pages_baseAddr; //agafo el punter a la seva taula de pagines
+	 set_cr3(new_TD);
+	 
+	 //3) store value of ebp in the pcb wtf?
+	 //4,5..
 }
 
 
