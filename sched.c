@@ -138,4 +138,14 @@ void inner_task_switch(union task_union*t) {
 	 //4,5..
 }
 
+/**
+ * APUNTS TEORIA
+ * void task_switch (struct task_struct *new) {
+ * 		dynamic link
+ * 		current()->kernel_esp = ebp
+ * 		esp = new->kernel_esp
+ * 		cr3 = new->dir_pages_baseAddr    // flush TLB
+ * 		pop ebp
+ * 		ret
+ * /
 
