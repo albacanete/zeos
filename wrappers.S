@@ -30,6 +30,7 @@ ENTRY(write)
 	movl %eax, errno
 	movl $0xffffffff, %eax 
 fin_write:
+	movl %ebp, %esp
 	popl %ebp
 	ret
 	
@@ -53,7 +54,55 @@ ENTRY(gettime)
 	movl %eax, errno
 	movl $0xffffffff, %eax 
 fin_gettime:
+	movl %ebp, %esp
 	popl %ebp
 	ret
 	
+
+ENTRY(getpid)
+
+	//dynamic link
+	pushl %ebp
+	movl %esp, %ebp
+	
+	movl $20, %eax
+	
+	//TRAP
+	int $0x80
+	
+	//control errores
+	cmpl $0x0, %eax
+	jge fin_getpid
+	
+	neg %eax 
+	movl %eax, errno
+	movl $0xffffffff, %eax 
+fin_getpid:
+	movl %ebp, %esp
+	popl %ebp
+	ret
+	
+	
+ENTRY(fork)
+
+	//dynamic link
+	pushl %ebp
+	movl %esp, %ebp
+	
+	movl $2, %eax
+	
+	//TRAP
+	int $0x80
+	
+	//control errores
+	cmpl $0x0, %eax
+	jge fin_fork
+	
+	neg %eax 
+	movl %eax, errno
+	movl $0xffffffff, %eax 
+fin_fork:
+	movl %ebp, %esp
+	popl %ebp
+	ret
 

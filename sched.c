@@ -6,6 +6,7 @@
 #include <mm.h>
 #include <io.h>
 #include <list.h>
+#include <errno.h>
 
 /**
  * Container for the Task array and 2 additional pages (the first and the last one)
@@ -16,18 +17,16 @@ union task_union protected_tasks[NR_TASKS+2]
 
 union task_union *task = &protected_tasks[1]; /* == union task_union task[NR_TASKS] */
 
-#if 0
+//#if 0
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
   return list_entry( l, struct task_struct, list);
 }
-#endif
+//#endif
 
 extern struct list_head blocked;
-
-struct list_head freequeue;
-struct list_head readyqueue;
-
+struct task_struct *idle_task;
+int ticks_left;
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -68,19 +67,31 @@ void init_idle (void)
 {
 	struct list_head *ilh = list_first(&freequeue);
 	list_del(ilh); //l'eliminem, sino segueix a la freequeue
-	struct task_struct *its = list_head_to_task_struct(&ilh);
-	its.PID = 0;
-	if (allocate_DIR(&its) != 1) {
-		}//falta tratar error
+	struct task_struct *its = list_head_to_task_struct(ilh);
+	its->PID = 0;
+	allocate_DIR(its);
 		
+	union task_union *itu = (union task_union*)its;
+	//task_switch(&itu);
 	
-	union taskunion *itu = (union task_union*)tu;
-	task_switch(&tu);
+	itu->stack[1020] = &(cpu_idle);
+	itu->stack[1016] = 0;
+	itu->task.kernel_esp  = &(itu->stack[1016]);
 	
+	idle_task = its;
 }
 
 void init_task1(void)
 {
+	struct list_head *init_lh = list_first(&freequeue);
+	list_del(init_lh); //l'eliminem, sino segueix a la freequeue
+	struct task_struct *init_ts = list_head_to_task_struct(init_lh);
+	init_ts->PID = 1;
+	allocate_DIR(init_ts);
+	set_user_pages(init_ts);
+	tss.esp0 = &(((union task_union *) init_ts) -> stack);  //stack[1024]
+	set_cr3(init_ts -> dir_pages_baseAddr);
+	
 }
 
 
@@ -92,12 +103,10 @@ void init_sched(){
 	 * list_add( &(el.anchor), &list );
 	 * void list_add(struct list_head *new, struct list_head *head)
 	 */
-	 int i =1;
-	 union task_union *t = task;
+	 int i = 1;
 	 while (i < NR_TASKS -1) {
-		 list_add(&(t -> task.list), &freequeue);
+		 list_add_tail(&(task[i].task.list), &freequeue);
 		 ++i;
-		 ++t;
 	 }
 }
 
@@ -112,40 +121,77 @@ struct task_struct* current()
   return (struct task_struct*)(ret_value&0xfffff000);
 }
 
-void task_switch(union task_union*t) {
+// 1. Guardar esi edi ebx
+	//save_registers();
 	
-	__asm__ __volatile__(
-		//tenemos que guardar esi edi ebx
-	)
-	//llamar a inner_task_switch. no entenc xq fer una funcio apart.
-	//crec que es la que realment canvia el proces 
+	// 2. Llamar a inner_task_switch
+	// es la que realment canvia el proces 
+	//inner_task_switch(&new);
 	
-	__asm__ __volatile__(
-		//aqui restauramos esi edi ebx
-	)
-}
-
-
-void inner_task_switch(union task_union*t) {
+	// 3. Restauramos esi edi ebx
+	
+void inner_task_switch(union task_union*new) {
 	//1) update de tss
-	
+	tss.esp0 = &(((union task_union*) new) -> stack[1024]);  
 	//2) change user address space --> update the current page directory
-	 struct task_struct *ts = (struct task_struct*)t;  //agafo el task_struct del nou proces a executar
-	 page_table_entry* new_TD = ts.dir_pages_baseAddr; //agafo el punter a la seva taula de pagines
-	 set_cr3(new_TD);
-	 
-	 //3) store value of ebp in the pcb wtf?
-	 //4,5..
+	struct task_struct *new_ts = (struct task_struct*)new;  //agafo el task_struct del nou proces a executar
+	page_table_entry* new_TD = new_ts->dir_pages_baseAddr; //agafo el punter a la seva taula de pagines
+	set_cr3(new_TD);
 }
 
-/**
+/*
  * APUNTS TEORIA
  * void task_switch (struct task_struct *new) {
  * 		dynamic link
+ * 		cr3 = new -> dir
+ * 		tss esp0 = &(((task_union*) new) -> stack[1024])
  * 		current()->kernel_esp = ebp
  * 		esp = new->kernel_esp
  * 		cr3 = new->dir_pages_baseAddr    // flush TLB
  * 		pop ebp
  * 		ret
- * /
+ */
+
+// Function to update the relevant information to take scheduling decisions
+void update_sched_data_rr(){
+	--ticks_left;
+}
+
+// Function to decide if it is necessary to change the current process
+int needs_sched_rr(){
+	return (ticks_left == 0);
+}
+
+// Function to update the state of a process
+void update_process_state_rr(struct task_struct *t, struct list_head *dest){
+	
+}
+
+// Function to select the next function to execute
+void sched_next_rr(){
+	struct list_head *next_lh = list_first(&readyqueue);
+	list_del(next_lh); 
+	//task_switch((union task_union*) list_head_to_task_struct(next_lh));
+}
+
+void schedule () {
+	update_sched_data_rr();
+	if (needs_sched_rr()) {
+		if (list_empty(&readyqueue)) {
+			 //task_switch((union task_union*) idle_task);
+		 }
+		else {
+			update_process_state_rr(current(), &readyqueue);
+			sched_next_rr();
+		}
+	}
+}
+
+int getquantum(struct task_struct *t) {
+	return t->quantum;
+}
+ 
+void set_quantum(struct task_struct *t, int new_quantum) {
+	t->quantum = new_quantum;
+}
 

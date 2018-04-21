@@ -52,6 +52,9 @@ bootsect.o: bootsect.s
 bootsect.s: bootsect.S Makefile
 	$(CPP) $(ASMFLAGS) -traditional $< -o $@
 
+sched.s: sched.S $(INCLUDEDIR)/asm.h
+	$(CPP) $(ASMFLAGS) -traditional $< -o $@
+
 wrappers.s: wrappers.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/errno.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
 
@@ -67,7 +70,7 @@ interrupt.o:interrupt.c $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/segment.h $(INCL
 
 io.o:io.c $(INCLUDEDIR)/io.h
 
-sched.o:sched.c $(INCLUDEDIR)/sched.h
+sched.o:sched.c $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/list.h 
 
 libc.o:libc.c $(INCLUDEDIR)/libc.h
 

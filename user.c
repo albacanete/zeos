@@ -16,13 +16,18 @@ int __attribute__ ((__section__(".text.main")))
 	char *c = "\nhola profe :)\n";
 	write(1, c, strlen(c));
     
-	/*int t = gettime();
+	int t = gettime();
 	if (t < 0) perror();
 	else {
 		itoa(t, tiempo);
 		write(1, tiempo, strlen(tiempo));
-	}*/
-
-			
+	}
+	
+	int pid = getpid();
+	char p[128];
+	itoa(pid, p);
+	write(1, p, strlen(p));
+	int f = fork();
+				
   while(1) { }
 }

@@ -39,6 +39,7 @@
  movl %eax, errno
  movl $0xffffffff, %eax
 fin_write:
+ movl %ebp, %esp
  popl %ebp
  ret
 
@@ -62,5 +63,54 @@ fin_write:
  movl %eax, errno
  movl $0xffffffff, %eax
 fin_gettime:
+ movl %ebp, %esp
+ popl %ebp
+ ret
+
+
+.globl getpid; .type getpid, @function; .align 0; getpid:
+
+
+ pushl %ebp
+ movl %esp, %ebp
+
+ movl $20, %eax
+
+
+ int $0x80
+
+
+ cmpl $0x0, %eax
+ jge fin_getpid
+
+ neg %eax
+ movl %eax, errno
+ movl $0xffffffff, %eax
+fin_getpid:
+ movl %ebp, %esp
+ popl %ebp
+ ret
+
+
+.globl fork; .type fork, @function; .align 0; fork:
+
+
+ pushl %ebp
+ movl %esp, %ebp
+
+ movl $2, %eax
+
+
+ int $0x80
+
+
+ cmpl $0x0, %eax
+ jge fin_fork
+
+ neg %eax
+ movl %eax, errno
+ movl $0xffffffff, %eax
+fin_fork:
+ movl %ebp, %esp
  popl %ebp
  ret
