@@ -11,14 +11,13 @@
 #include <mm.h>
 #include <io.h>
 #include <utils.h>
-#include <zeos_mm.h> /* TO BE DELETED WHEN ADDED THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS */
+//#include <zeos_mm.h> /* TO BE DELETED WHEN ADDED THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS */
 
 
 int (*usr_main)(void) = (void *) PH_USER_START;
 unsigned int *p_sys_size = (unsigned int *) KERNEL_START;
 unsigned int *p_usr_size = (unsigned int *) KERNEL_START+1;
 unsigned int *p_rdtr = (unsigned int *) KERNEL_START+2;
-
 
 /************************/
 /** Auxiliar functions **/
@@ -55,8 +54,6 @@ inline void set_seg_regs(Word data_sel, Word stack_sel, DWord esp)
 
 }
 
-
-int zeos_ticks = 0;
 /*
  *   Main entry point to ZEOS Operating System
  */
@@ -88,10 +85,12 @@ int __attribute__((__section__(".text.main")))
 
 /* Initialize an address space to be used for the monoprocess version of ZeOS */
 
-  monoprocess_init_addr_space(); /* TO BE DELETED WHEN ADDED THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS */
+  //monoprocess_init_addr_space(); /* TO BE DELETED WHEN ADDED THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS */
 
   /* Initialize Scheduling */
   init_sched();
+	/* Initialize the console blocked list */
+	zeos_console_init();
 
   /* Initialize idle task  data */
   init_idle();
@@ -103,7 +102,7 @@ int __attribute__((__section__(".text.main")))
 
 
   printk("Entering user mode...");
-	zeos_ticks = 0;
+
   enable_int();
   /*
    * We return from a 'theorical' call to a 'call gate' to reduce our privileges

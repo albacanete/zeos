@@ -20,18 +20,17 @@ INCLUDEDIR = include
 # Define here flags to compile the tests if needed
 JP =
 
-CFLAGS = -O2  -g $(JP) -fno-omit-frame-pointer -ffreestanding -Wall -I$(INCLUDEDIR)
+CFLAGS = -O -g $(JP) -fno-omit-frame-pointer -ffreestanding -Wall -I$(INCLUDEDIR)
 ASMFLAGS = -I$(INCLUDEDIR)
 SYSLDFLAGS = -T system.lds
 USRLDFLAGS = -T user.lds
 LINKFLAGS = -g
 
-SYSOBJ = interrupt.o entry.o sys_call_table.o io.o sched.o sys.o mm.o devices.o utils.o hardware.o list.o
-
-LIBZEOS = -L . -l zeos
+SYSOBJ = interrupt.o entry.o sys_call_table.o io.o sched.o sys.o mm.o devices.o utils.o hardware.o list.o p_stats.o kernel-utils.o libschedperf.a
+LIBZEOS = -L . -l zeos -l auxjp
 
 #add to USROBJ the object files required to complete the user program
-USROBJ = libc.o wrappers.o # libjp.a 
+USROBJ = libc.o user-utils.o libuser.a # libjp.a
 
 all:zeos.bin
 
@@ -52,13 +51,13 @@ bootsect.o: bootsect.s
 bootsect.s: bootsect.S Makefile
 	$(CPP) $(ASMFLAGS) -traditional $< -o $@
 
-sched.s: sched.S $(INCLUDEDIR)/asm.h
-	$(CPP) $(ASMFLAGS) -traditional $< -o $@
-
-wrappers.s: wrappers.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/errno.h
+entry.s: entry.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
 
-entry.s: entry.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/errno.h
+user-utils.s: user-utils.S $(INCLUDEDIR)/asm.h
+	$(CPP) $(ASMFLAGS) -o $@ $<
+
+kernel-utils.s: kernel-utils.S $(INCLUDEDIR)/asm.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
 
 sys_call_table.s: sys_call_table.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
@@ -66,20 +65,21 @@ sys_call_table.s: sys_call_table.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
 
 user.o:user.c $(INCLUDEDIR)/libc.h
 
-interrupt.o:interrupt.c $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/system.h
+interrupt.o:interrupt.c $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h
 
 io.o:io.c $(INCLUDEDIR)/io.h
 
-sched.o:sched.c $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/list.h 
+sched.o:sched.c $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/schedperf.h
 
 libc.o:libc.c $(INCLUDEDIR)/libc.h
 
 mm.o:mm.c $(INCLUDEDIR)/types.h $(INCLUDEDIR)/mm.h
 
-sys.o:sys.c $(INCLUDEDIR)/devices.h $(INCLUDEDIR)/errno.h $(INCLUDEDIR)/system.h
+sys.o:sys.c $(INCLUDEDIR)/devices.h
 
 utils.o:utils.c $(INCLUDEDIR)/utils.h
 
+p_stats.o:p_stats.c $(INCLUDEDIR)/utils.h
 
 system.o:system.c $(INCLUDEDIR)/hardware.h system.lds $(SYSOBJ) $(INCLUDEDIR)/segment.h $(INCLUDEDIR)/types.h $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/system.h $(INCLUDEDIR)/sched.h $(INCLUDEDIR)/mm.h $(INCLUDEDIR)/io.h $(INCLUDEDIR)/mm_address.h 
 
