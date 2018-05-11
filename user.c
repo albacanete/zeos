@@ -11,210 +11,232 @@ int __attribute__ ((__section__(".text.main")))
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
 
-	int s = set_sched_policy(0);
+	int s = set_sched_policy(1);
 
 
 	/*
 	 * PROVA DE CPU (modo user)
 	 */
-	 
-	int p, pidh, pidp;
-	write(1, "PID PADRE: ", strlen("PID PADRE: "));
-	pidp = getpid();
-	char pp[128];
-	itoa(pidp, pp);
-	write(1, pp, strlen(pp));
-	write(1, "\n", strlen("\n"));
-	for (int i = 0; i < 2; ++i) {
+	
+	/*int pids[3];
+	int p, i;
+	pids[0] = getpid();
+
+	for (i = 1; i < 3; ++i) {
 		p = fork();
 		switch(p) {
 			case 0:
-				write(1, "PID HIJO: ", strlen("PID HIJO: "));
-				pidh = getpid();
-				char ph[128];
-				itoa(pidh, ph);
-				write(1, ph, strlen(ph));
-				write(1, "\n", strlen("\n"));
-				for (int i = 0; i < 100000000; ++i);
+				pids[1] = getpid();
 				
-				struct stats st_h;
-				int statsh = get_stats(pidh, &st_h);
-				write(1, "user: ", strlen("user: "));
-				char uh[128];
-				itoa(st_h.user_ticks, uh);
-				write(1, uh, strlen(uh));
-				write(1, "\n", strlen("\n"));
-				write(1, "system: ", strlen("system: "));
-				char sysh[128];
-				itoa(st_h.system_ticks, sysh);
-				write(1, sysh, strlen(sysh));
-				write(1, "\n", strlen("\n"));
-				write(1, "blocked: ", strlen("blocked: "));
-				char blockh[128];
-				itoa(st_h.blocked_ticks, blockh);
-				write(1, blockh, strlen(blockh));
-				write(1, "\n", strlen("\n"));
-				write(1, "\n", strlen("\n"));
-				exit(0);
-			
+				if (i == 1) for (int j = 0; j < 100000000; ++j);
+				else for (int j = 0; j < 80000000; ++j);
+				break;
+				
 			case -1:
 				write(1, "error", strlen("error"));
 				write(1, "\n", strlen("\n"));
 				exit(0);
 			
 			default:
-				for (int i = 0; i < 5000000; ++i);
-				
-				struct stats st;
-				int stats = get_stats(pidh, &st);
-				write(1, "user: ", strlen("user: "));
-				char u[128];
-				itoa(st.user_ticks, u);
-				write(1, u, strlen(u));
-				write(1, "\n", strlen("\n"));
-				write(1, "system: ", strlen("system: "));
-				char sys[128];
-				itoa(st.system_ticks, sys);
-				write(1, sys, strlen(sys));
-				write(1, "\n", strlen("\n"));
-				write(1, "blocked: ", strlen("blocked: "));
-				char block[128];
-				itoa(st.blocked_ticks, block);
-				write(1, block, strlen(block));
-				write(1, "\n", strlen("\n"));
-				write(1, "\n", strlen("\n"));			
+				for (int j = 0; j < 50000000; ++j);	
+				break;
 		}
 	} 
 	
-	for (int i = 0; i < 9000000; ++i);
-				
-	struct stats stp;
-	int statsp = get_stats(pidp, &stp);
-	write(1, "user: ", strlen("user: "));
-	char up[128];
-	itoa(stp.user_ticks, up);
-	write(1, up, strlen(up));
-	write(1, "\n", strlen("\n"));
-	write(1, "system: ", strlen("system: "));
-	char sysp[128];
-	itoa(stp.system_ticks, sysp);
-	write(1, sysp, strlen(sysp));
-	write(1, "\n", strlen("\n"));
-	write(1, "blocked: ", strlen("blocked: "));
-	char blockp[128];
-	itoa(stp.blocked_ticks, blockp);
-	write(1, blockp, strlen(blockp));
-	write(1, "\n", strlen("\n"));
-	write(1, "\n", strlen("\n"));
+	for (i = 0; i < 3; ++i) {
+		int pid = pids[i];
+		write(1, "PID: ", strlen("PID: "));
+		char pc[128];
+		itoa(pid, pc);
+		write(1, pc, strlen(pc));
+		write(1, "\n", strlen("\n"));		
+		struct stats stp;
+		int statsp = get_stats(pid, &stp);
+		write(1, "user: ", strlen("user: "));
+		char up[128];
+		itoa(stp.user_ticks, up);
+		write(1, up, strlen(up));
+		write(1, "\n", strlen("\n"));
+		write(1, "system: ", strlen("system: "));
+		char sysp[128];
+		itoa(stp.system_ticks, sysp);
+		write(1, sysp, strlen(sysp));
+		write(1, "\n", strlen("\n"));
+		write(1, "blocked: ", strlen("blocked: "));
+		char blockp[128];
+		itoa(stp.blocked_ticks, blockp);
+		write(1, blockp, strlen(blockp));
+		write(1, "\n", strlen("\n"));
+		write(1, "ready: ", strlen("ready: "));
+		char readyp[128];
+		itoa(stp.ready_ticks, readyp);
+		write(1, readyp, strlen(readyp));
+		write(1, "\n", strlen("\n"));
+	}*/
 
 	
 	/*
 	 * PROVA DE I/O
 	 */
-	
-	/*int i, rp, rh, p;
+	/*
+	int pids[3];
+	int p, i, r;
 	int espera_hijo = 1000;
 	int espera_padre = 3000;
 	char c[128];
-	for (i = 0; i < 3; ++i) {
+	pids[0] = getpid();
+
+	for (i = 1; i < 3; ++i) {
 		p = fork();
 		switch(p) {
 			case 0:
-				rh = read(0, c, espera_hijo);
-				itoa(i, c);
-				write(1, c, strlen(c));
+				pids[1] = getpid();
+				
+				if (i == 1) r = read(0, c, 2*espera_hijo);
+				else r = read(0, c, espera_hijo);
+				
 				break;
-			
+				
 			case -1:
 				write(1, "error", strlen("error"));
 				write(1, "\n", strlen("\n"));
 				exit(0);
 			
 			default:
-				rp = read(0, c, espera_padre);
-				itoa(i, c);
-				write(1, c, strlen(c));
+				r = read(0, c, espera_padre);
+				break;
 		}
-		
-	}
+	} 
 	
-	write(1, "\n", strlen("\n"));
-	p = getpid();
-	struct stats st;
-	int stats = get_stats(p, &st);
-	write(1, "user: ", strlen("user: "));
-	char u[128];
-	itoa(st.user_ticks, u);
-	write(1, u, strlen(u));
-	write(1, "\n", strlen("\n"));
-	write(1, "system: ", strlen("system: "));
-	char sys[128];
-	itoa(st.system_ticks, sys);
-	write(1, sys, strlen(sys));
-	write(1, "\n", strlen("\n"));
-	write(1, "blocked: ", strlen("blocked: "));
-	char block[128];
-	itoa(st.blocked_ticks, block);
-	write(1, block, strlen(block));
-	write(1, "\n", strlen("\n"));*/
-
+	for (i = 0; i < 3; ++i) {
+		int pid = pids[i];
+		write(1, "PID: ", strlen("PID: "));
+		char pc[128];
+		itoa(pid, pc);
+		write(1, pc, strlen(pc));
+		write(1, "\n", strlen("\n"));		
+		struct stats stp;
+		int statsp = get_stats(pid, &stp);
+		write(1, "user: ", strlen("user: "));
+		char up[128];
+		itoa(stp.user_ticks, up);
+		write(1, up, strlen(up));
+		write(1, "\n", strlen("\n"));
+		write(1, "system: ", strlen("system: "));
+		char sysp[128];
+		itoa(stp.system_ticks, sysp);
+		write(1, sysp, strlen(sysp));
+		write(1, "\n", strlen("\n"));
+		write(1, "blocked: ", strlen("blocked: "));
+		char blockp[128];
+		itoa(stp.blocked_ticks, blockp);
+		write(1, blockp, strlen(blockp));
+		write(1, "\n", strlen("\n"));
+		write(1, "ready: ", strlen("ready: "));
+		char readyp[128];
+		itoa(stp.ready_ticks, readyp);
+		write(1, readyp, strlen(readyp));
+		write(1, "\n", strlen("\n"));
+	}
+	*/
 	
 	/*
 	 * PROVA DE CPU + I/O
 	 */
 	 
-	/*int rp, rh, p;
+	int pids[3];
+	int p, i, r;
 	int espera_hijo = 1000;
 	int espera_padre = 3000;
-	int pidp;
 	char c[128];
-	for (int i = 0; i < 3; ++i) {
+	pids[0] = getpid();
+
+	for (i = 1; i < 3; ++i) {
 		p = fork();
 		switch(p) {
 			case 0:
+				pids[1] = getpid();
+				
+				for (int i = 0; i < 9000; ++i);
+				
+				if (i == 1) r = read(0, c, 2*espera_hijo);
+				else r = read(0, c, espera_hijo);
+				
 				for (int i = 0; i < 10000; ++i);
-				rh = read(0, c, espera_hijo);
-				itoa(i, c);
-				write(1, c, strlen(c));
-				for (int i = 0; i < 10000; ++i);
+				
+				write(1, "PID: ", strlen("PID: "));
+				char pch[128];
+				itoa(getpid(), pch);
+				write(1, pch, strlen(pch));
+				write(1, "\n", strlen("\n"));
+				struct stats stph;
+				int statsp = get_stats(getpid(), &stph);
+				write(1, "user: ", strlen("user: "));
+				char uph[128];
+				itoa(stph.user_ticks, uph);
+				write(1, uph, strlen(uph));
+				write(1, "\n", strlen("\n"));
+				write(1, "system: ", strlen("system: "));
+				char sysph[128];
+				itoa(stph.system_ticks, sysph);
+				write(1, sysph, strlen(sysph));
+				write(1, "\n", strlen("\n"));
+				write(1, "blocked: ", strlen("blocked: "));
+				char blockph[128];
+				itoa(stph.blocked_ticks, blockph);
+				write(1, blockph, strlen(blockph));
+				write(1, "\n", strlen("\n"));
+				write(1, "ready: ", strlen("ready: "));
+				char readyph[128];
+				itoa(stph.ready_ticks, readyph);
+				write(1, readyph, strlen(readyph));
+				write(1, "\n", strlen("\n"));
 				break;
-			
+				
 			case -1:
 				write(1, "error", strlen("error"));
 				write(1, "\n", strlen("\n"));
 				exit(0);
 			
 			default:
-				for (int i = 0; i < 10000; ++i);
-				rp = read(0, c, espera_padre);
-				itoa(i, c);
-				write(1, c, strlen(c));
-				for (int i = 0; i < 10000; ++i);
+				for (int i = 0; i < 30000; ++i);
+				r = read(0, c, espera_padre);
+				for (int i = 0; i < 9000; ++i);
+				break;
 		}
 	} 
 	
-	pidp = getpid();
-	if (pidp == 1) {
-		write(1, "\n", strlen("\n"));
-		struct stats st;
-		int stats = get_stats(pidp, &st);
+	for (i = 0; i < 3; ++i) {
+		int pid = pids[i];
+		write(1, "PID: ", strlen("PID: "));
+		char pc[128];
+		itoa(pid, pc);
+		write(1, pc, strlen(pc));
+		write(1, "\n", strlen("\n"));		
+		struct stats stp;
+		int statsp = get_stats(pid, &stp);
 		write(1, "user: ", strlen("user: "));
-		char u[128];
-		itoa(st.user_ticks, u);
-		write(1, u, strlen(u));
+		char up[128];
+		itoa(stp.user_ticks, up);
+		write(1, up, strlen(up));
 		write(1, "\n", strlen("\n"));
 		write(1, "system: ", strlen("system: "));
-		char sys[128];
-		itoa(st.system_ticks, sys);
-		write(1, sys, strlen(sys));
+		char sysp[128];
+		itoa(stp.system_ticks, sysp);
+		write(1, sysp, strlen(sysp));
 		write(1, "\n", strlen("\n"));
 		write(1, "blocked: ", strlen("blocked: "));
-		char block[128];
-		itoa(st.blocked_ticks, block);
-		write(1, block, strlen(block));
+		char blockp[128];
+		itoa(stp.blocked_ticks, blockp);
+		write(1, blockp, strlen(blockp));
 		write(1, "\n", strlen("\n"));
-	}*/
+		write(1, "ready: ", strlen("ready: "));
+		char readyp[128];
+		itoa(stp.ready_ticks, readyp);
+		write(1, readyp, strlen(readyp));
+		write(1, "\n", strlen("\n"));
+	}
 	 
-	
+
 	while(1) { }
 }
